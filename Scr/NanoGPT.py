@@ -79,11 +79,11 @@ class Block(nn.Module):
 
 class GPTLanguageModel(nn.Module):
 
-    def __init__(self, block_size, vocab_size, n_embd, n_layer, n_head, dropout, num_classes):
+    def __init__(self, block_size, vocab_size, n_embd, n_layer, n_head, dropout, num_classes, device):
         super().__init__()
         # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
-        self.position_embedding_table = nn.Embedding(block_size, n_embd)
+        self.position_embedding_table = nn.Embedding(block_size, n_embd).to(device)
         self.blocks = nn.Sequential(*[Block(n_embd, n_head, block_size, dropout) for _ in range(n_layer)])
         self.ln_f = nn.LayerNorm(n_embd) # final layer norm
         self.lm_head = nn.Linear(n_embd, vocab_size)
@@ -100,9 +100,9 @@ class GPTLanguageModel(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, idx, targets=None, device=None):
+    def forward(self, idx, targets=None, class_labels = None, device=None):
         B, T = idx.shape
-
+        device = idx.device
         # idx and targets are both (B,T) tensor of integers
         tok_emb = self.token_embedding_table(idx) # (B,T,C)
         pos_emb = self.position_embedding_table(torch.arange(T, device=device)) # (T,C)
@@ -123,13 +123,15 @@ class GPTLanguageModel(nn.Module):
 
         return logits, loss
 
-    def generate(self, idx, max_new_tokens, class_labels=None):
+    def generate(self, idx, max_new_tokens):
         # idx is (B, T) array of indices in the current context
-        for _ in range(max_new_tokens):
+        block_size = 306
+
+        for _ in range(max_new_tokens-77):
             # crop idx to the last block_size tokens
-            idx_cond = idx[:, -block_size:]
+            idx_cond = idx[:, :306]
             # get the predictions
-            logits, loss = self(idx_cond,class_labels=class_labels) # (B,T,C)
+            logits, loss = self(idx_cond) # (B,T,C)
             # focus only on the last time step
             logits = logits[:, -1, :] # becomes (B, C)
             # apply softmax to get probabilities
