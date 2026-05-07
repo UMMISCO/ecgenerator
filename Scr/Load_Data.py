@@ -23,7 +23,7 @@ def normalization(Z):
     return(-1+((Z-mini)*(2))/(maxi-mini))
 
 
-def load_ptb_xl_data(path="physionet/ptb_xl/raw/physionet.org/files/ptb-xl/1.0.3/"):
+def load_ptb_xl_data(path="../Data/"):
     df = pd.read_csv(path+"ptbxl_database.csv")
     matrix_ecg = []
     matrix_lead = []
