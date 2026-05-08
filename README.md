@@ -1,4 +1,3 @@
-````markdown
 # ECGenerator
 
 This README explains how to run the training process for the **ECGenerator** model.
@@ -117,4 +116,3 @@ plt.show()
 ```
 
 > ⚠️ **Note:** `.tolist()` must be used instead of `.numpy()` when running on Apple Silicon (MPS backend), as NumPy interoperability is not available in that environment.
-````
